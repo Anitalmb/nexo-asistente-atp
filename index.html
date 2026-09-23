@@ -17,11 +17,9 @@
       background: #071426;
       color: white;
       font-family: Arial, sans-serif;
-
       display: flex;
       justify-content: center;
       align-items: center;
-
       text-align: center;
     }
 
@@ -51,14 +49,10 @@
     .panel {
       margin-top: 50px;
       padding: 30px;
-
       background: rgba(20, 40, 70, 0.75);
-
       border: 1px solid #48aaff;
       border-radius: 28px;
-
-      box-shadow:
-        0 0 35px rgba(0, 130, 255, 0.15);
+      box-shadow: 0 0 35px rgba(0, 130, 255, 0.15);
     }
 
     canvas {
@@ -70,35 +64,21 @@
 
     button {
       margin-top: 20px;
-
       width: 82px;
       height: 82px;
-
       border-radius: 50%;
       border: 2px solid #63c7ff;
-
       background: #102d50;
       color: white;
-
       font-size: 32px;
       cursor: pointer;
-
-      box-shadow:
-        0 0 25px rgba(70, 190, 255, 0.4);
-
-      transition: 0.2s;
-    }
-
-    button:hover {
-      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(70, 190, 255, 0.4);
     }
 
     #estado {
       margin-top: 18px;
-
       font-size: 25px;
       font-weight: bold;
-
       letter-spacing: 5px;
     }
 
@@ -111,84 +91,57 @@
 
 <body>
 
-  <div class="contenedor">
+<div class="contenedor">
 
-    <h1>NEXO</h1>
+  <h1>NEXO</h1>
 
-    <h2>
-      Asistente virtual de la maestra Anita
-    </h2>
+  <h2>Asistente virtual de la maestra Anita</h2>
 
-    <div class="subtitulo">
-      Acompañamiento pedagógico fundamentado en documentos oficiales
-    </div>
+  <div class="subtitulo">
+    Acompañamiento pedagógico fundamentado en documentos oficiales
+  </div>
 
-    <div class="panel">
+  <div class="panel">
 
-      <canvas id="onda"></canvas>
+    <canvas id="onda"></canvas>
 
-      <button id="microfono" title="Activar NEXO">
-        🎙️
-      </button>
+    <button id="microfono">🎙️</button>
 
-      <div id="estado">
-        EN ESPERA
-      </div>
+    <div id="estado">EN ESPERA</div>
 
-      <div id="instruccion">
-        Toca el micrófono una vez para activar NEXO
-      </div>
-
+    <div id="instruccion">
+      Toca el micrófono una vez para activar NEXO
     </div>
 
   </div>
 
+</div>
+
 
 <script>
 
-/* ==========================================
-   ELEMENTOS
-========================================== */
+const boton = document.getElementById("microfono");
+const estado = document.getElementById("estado");
+const instruccion = document.getElementById("instruccion");
 
-const boton =
-  document.getElementById("microfono");
+const canvas = document.getElementById("onda");
+const ctx = canvas.getContext("2d");
 
-const estado =
-  document.getElementById("estado");
-
-const instruccion =
-  document.getElementById("instruccion");
-
-const canvas =
-  document.getElementById("onda");
-
-const ctx =
-  canvas.getContext("2d");
-
-
-/* ==========================================
-   VARIABLES
-========================================== */
 
 let audioContext;
 let analyser;
 let dataArray;
 
-let microfonoPreparado = false;
-
 let sistemaActivo = false;
-let reconocimientoActivo = false;
-
+let microfonoPreparado = false;
 let nexoHablando = false;
-
-let ultimaPregunta = "";
 
 let vozNexo = null;
 
 
-/* ==========================================
+/* =========================
    CANVAS
-========================================== */
+========================= */
 
 function ajustarCanvas() {
 
@@ -207,76 +160,18 @@ window.addEventListener(
 );
 
 
-/* ==========================================
+/* =========================
    ONDA
-========================================== */
+========================= */
 
 function dibujarOnda() {
 
-  requestAnimationFrame(
-    dibujarOnda
-  );
+  requestAnimationFrame(dibujarOnda);
 
-  const ancho =
-    canvas.width;
+  const ancho = canvas.width;
+  const alto = canvas.height;
 
-  const alto =
-    canvas.height;
-
-
-  ctx.clearRect(
-    0,
-    0,
-    ancho,
-    alto
-  );
-
-
-  ctx.shadowBlur = 0;
-
-
-  /*
-    SI NEXO ESTÁ APAGADO
-    MOSTRAMOS LÍNEA TRANQUILA
-  */
-
-  if (
-    !sistemaActivo ||
-    !analyser
-  ) {
-
-    ctx.beginPath();
-
-    ctx.strokeStyle =
-      "#4aaeff";
-
-    ctx.lineWidth =
-      3 * devicePixelRatio;
-
-    ctx.moveTo(
-      0,
-      alto / 2
-    );
-
-    ctx.lineTo(
-      ancho,
-      alto / 2
-    );
-
-    ctx.stroke();
-
-    return;
-  }
-
-
-  /*
-    ONDA DEL MICRÓFONO
-  */
-
-  analyser.getByteTimeDomainData(
-    dataArray
-  );
-
+  ctx.clearRect(0, 0, ancho, alto);
 
   ctx.beginPath();
 
@@ -284,31 +179,35 @@ function dibujarOnda() {
     3 * devicePixelRatio;
 
 
-  if (nexoHablando) {
+  if (
+    !sistemaActivo ||
+    !analyser
+  ) {
 
-    ctx.strokeStyle =
-      "#f3c969";
+    ctx.strokeStyle = "#4aaeff";
 
-    ctx.shadowColor =
-      "#dcae46";
+    ctx.moveTo(0, alto / 2);
+    ctx.lineTo(ancho, alto / 2);
 
-  } else {
+    ctx.stroke();
 
-    ctx.strokeStyle =
-      "#54d9ff";
-
-    ctx.shadowColor =
-      "#24aaff";
+    return;
   }
 
 
-  ctx.shadowBlur =
-    16 * devicePixelRatio;
+  analyser.getByteTimeDomainData(
+    dataArray
+  );
 
 
-  const sliceWidth =
+  ctx.strokeStyle =
+    nexoHablando
+      ? "#f3c969"
+      : "#54d9ff";
+
+
+  const slice =
     ancho / dataArray.length;
-
 
   let x = 0;
 
@@ -320,7 +219,7 @@ function dibujarOnda() {
   ) {
 
     const v =
-      dataArray[i] / 128.0;
+      dataArray[i] / 128;
 
     const y =
       v * alto / 2;
@@ -328,37 +227,25 @@ function dibujarOnda() {
 
     if (i === 0) {
 
-      ctx.moveTo(
-        x,
-        y
-      );
+      ctx.moveTo(x, y);
 
     } else {
 
-      ctx.lineTo(
-        x,
-        y
-      );
+      ctx.lineTo(x, y);
     }
 
 
-    x += sliceWidth;
+    x += slice;
   }
-
-
-  ctx.lineTo(
-    ancho,
-    alto / 2
-  );
 
 
   ctx.stroke();
 }
 
 
-/* ==========================================
-   PREPARAR MICRÓFONO
-========================================== */
+/* =========================
+   MICRÓFONO
+========================= */
 
 async function prepararMicrofono() {
 
@@ -370,9 +257,10 @@ async function prepararMicrofono() {
   try {
 
     const stream =
-      await navigator.mediaDevices.getUserMedia({
-        audio: true
-      });
+      await navigator.mediaDevices
+        .getUserMedia({
+          audio: true
+        });
 
 
     audioContext =
@@ -386,19 +274,17 @@ async function prepararMicrofono() {
       audioContext.createAnalyser();
 
 
-    analyser.fftSize =
-      2048;
+    analyser.fftSize = 2048;
 
 
     const source =
-      audioContext.createMediaStreamSource(
-        stream
-      );
+      audioContext
+        .createMediaStreamSource(
+          stream
+        );
 
 
-    source.connect(
-      analyser
-    );
+    source.connect(analyser);
 
 
     dataArray =
@@ -407,9 +293,7 @@ async function prepararMicrofono() {
       );
 
 
-    microfonoPreparado =
-      true;
-
+    microfonoPreparado = true;
 
     return true;
 
@@ -419,119 +303,67 @@ async function prepararMicrofono() {
     estado.textContent =
       "MICRÓFONO NO DISPONIBLE";
 
-
     instruccion.textContent =
       "Revisa el permiso del navegador";
-
 
     return false;
   }
 }
 
 
-/* ==========================================
-   NORMALIZAR TEXTO
-========================================== */
+/* =========================
+   VOZ
+========================= */
 
-function normalizar(texto) {
-
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(
-      /[\u0300-\u036f]/g,
-      ""
-    );
-}
-
-
-/* ==========================================
-   VOZ DE NEXO
-========================================== */
-
-function cargarVozNexo() {
+function cargarVoces() {
 
   const voces =
-    speechSynthesis.getVoices();
+    window.speechSynthesis
+      .getVoices();
 
-
-  if (!voces.length) {
-    return;
-  }
-
-
-  /*
-    PRIMERA OPCIÓN:
-    ESPAÑOL DE MÉXICO
-  */
 
   vozNexo =
     voces.find(
-      voz =>
-        voz.lang
+      v =>
+        v.lang
           .toLowerCase()
-          .startsWith("es-mx")
+          .includes("es-mx")
     );
 
-
-  /*
-    SEGUNDA OPCIÓN:
-    CUALQUIER VOZ EN ESPAÑOL
-  */
 
   if (!vozNexo) {
 
     vozNexo =
       voces.find(
-        voz =>
-          voz.lang
+        v =>
+          v.lang
             .toLowerCase()
             .startsWith("es")
       );
   }
 
 
-  /*
-    SI NO ENCUENTRA ESPAÑOL,
-    USA LA VOZ PREDETERMINADA
-  */
-
-  if (!vozNexo) {
-
-    vozNexo =
-      voces.find(
-        voz =>
-          voz.default
-      );
-  }
+  console.log(
+    "Voz NEXO:",
+    vozNexo
+  );
 }
 
 
-cargarVozNexo();
+cargarVoces();
 
 
-if (
-  "onvoiceschanged"
-  in speechSynthesis
-) {
-
-  speechSynthesis.onvoiceschanged =
-    cargarVozNexo;
-}
+window.speechSynthesis.onvoiceschanged =
+  cargarVoces;
 
 
-/* ==========================================
-   MOSTRAR EN ESPERA
-========================================== */
+/* =========================
+   EN ESPERA
+========================= */
 
 function mostrarEspera() {
 
   if (!sistemaActivo) {
-    return;
-  }
-
-
-  if (nexoHablando) {
     return;
   }
 
@@ -545,38 +377,9 @@ function mostrarEspera() {
 }
 
 
-/* ==========================================
-   REINICIAR ESCUCHA
-========================================== */
-
-function reiniciarEscucha() {
-
-  if (!sistemaActivo) {
-    return;
-  }
-
-
-  if (nexoHablando) {
-    return;
-  }
-
-
-  try {
-
-    reconocimiento.start();
-
-  } catch (error) {
-
-    console.log(
-      "Esperando para escuchar nuevamente..."
-    );
-  }
-}
-
-
-/* ==========================================
+/* =========================
    HABLAR
-========================================== */
+========================= */
 
 function hablar(texto) {
 
@@ -584,27 +387,20 @@ function hablar(texto) {
     !("speechSynthesis" in window)
   ) {
 
-    nexoHablando =
-      false;
-
-    mostrarEspera();
-
-    reiniciarEscucha();
+    estado.textContent =
+      "VOZ NO DISPONIBLE";
 
     return;
   }
 
 
+  nexoHablando = true;
+
+
   /*
-    IMPORTANTE:
-
-    NEXO DEJA DE ESCUCHAR
-    ANTES DE HABLAR.
+    APAGAMOS EL OÍDO
+    MIENTRAS NEXO HABLA
   */
-
-  nexoHablando =
-    true;
-
 
   try {
 
@@ -613,7 +409,22 @@ function hablar(texto) {
   } catch (error) {}
 
 
-  speechSynthesis.cancel();
+  /*
+    MOSTRAMOS RESPONDIENDO
+    ANTES DE PEDIR LA VOZ
+  */
+
+  estado.textContent =
+    "RESPONDIENDO";
+
+
+  instruccion.textContent =
+    "NEXO está hablando";
+
+
+  window.speechSynthesis.cancel();
+
+  window.speechSynthesis.resume();
 
 
   const mensaje =
@@ -625,14 +436,11 @@ function hablar(texto) {
   mensaje.lang =
     "es-MX";
 
-
   mensaje.rate =
     0.95;
 
-
   mensaje.pitch =
-    1.0;
-
+    1;
 
   mensaje.volume =
     1;
@@ -647,102 +455,70 @@ function hablar(texto) {
 
   mensaje.onstart = () => {
 
-    estado.textContent =
-      "RESPONDIENDO";
-
-
-    instruccion.textContent =
-      "NEXO está hablando";
+    console.log(
+      "NEXO comenzó a hablar"
+    );
   };
 
 
   mensaje.onend = () => {
 
-    nexoHablando =
-      false;
-
-
-    mostrarEspera();
-
-
-    /*
-      ESPERAMOS UN MOMENTO
-      ANTES DE VOLVER A ESCUCHAR
-    */
-
-    setTimeout(
-      reiniciarEscucha,
-      700
+    console.log(
+      "NEXO terminó de hablar"
     );
+
+
+    nexoHablando = false;
+
+
+    setTimeout(() => {
+
+      mostrarEspera();
+
+      reiniciarEscucha();
+
+    }, 800);
   };
 
 
-  mensaje.onerror = () => {
+  mensaje.onerror = (event) => {
 
-    nexoHablando =
-      false;
-
-
-    mostrarEspera();
-
-
-    setTimeout(
-      reiniciarEscucha,
-      700
+    console.log(
+      "Error de voz:",
+      event.error
     );
+
+
+    nexoHablando = false;
+
+
+    estado.textContent =
+      "ERROR DE VOZ";
+
+
+    instruccion.textContent =
+      "No pude reproducir la voz";
   };
-
-
-  speechSynthesis.speak(
-    mensaje
-  );
-}
-
-
-/* ==========================================
-   RECIBIR PREGUNTA
-========================================== */
-
-function recibirPregunta(pregunta) {
-
-  ultimaPregunta =
-    pregunta.trim();
-
-
-  console.log(
-    "Pregunta para NEXO:",
-    ultimaPregunta
-  );
-
-
-  estado.textContent =
-    "PREGUNTA RECIBIDA";
-
-
-  instruccion.textContent =
-    "Preparando respuesta";
 
 
   /*
-    POR AHORA ES UNA RESPUESTA DE PRUEBA.
-
-    DESPUÉS AQUÍ CONECTAREMOS
-    LOS DOCUMENTOS OFICIALES.
+    PEQUEÑA PAUSA DESPUÉS
+    DE CANCELAR LA VOZ ANTERIOR
   */
 
   setTimeout(() => {
 
-    hablar(
-      "He recibido tu pregunta. Estoy listo para consultar mis fuentes."
+    window.speechSynthesis.speak(
+      mensaje
     );
 
-  }, 500);
+  }, 150);
 }
 
 
-/* ==========================================
-   RECONOCIMIENTO DE VOZ
-========================================== */
+/* =========================
+   RECONOCIMIENTO
+========================= */
 
 const SpeechRecognition =
   window.SpeechRecognition ||
@@ -775,214 +551,178 @@ if (SpeechRecognition) {
 
 
 
-  reconocimiento.onstart = () => {
-
-    reconocimientoActivo =
-      true;
+  reconocimiento.onresult =
+    (event) => {
 
 
-    if (!nexoHablando) {
-
-      mostrarEspera();
-    }
-  };
+      if (nexoHablando) {
+        return;
+      }
 
 
-
-  reconocimiento.onresult = (event) => {
-
-    /*
-      SI NEXO ESTÁ HABLANDO,
-      NO PROCESAMOS NADA.
-    */
-
-    if (nexoHablando) {
-      return;
-    }
+      const textoOriginal =
+        event.results[0][0]
+          .transcript;
 
 
-    const textoOriginal =
-      event.results[0][0].transcript;
+      const texto =
+        textoOriginal
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(
+            /[\u0300-\u036f]/g,
+            ""
+          );
 
 
-    const textoNormalizado =
-      normalizar(
+      console.log(
+        "Escuché:",
         textoOriginal
       );
 
 
-    console.log(
-      "Voz detectada:",
-      textoOriginal
-    );
+      const posicion =
+        texto.indexOf("nexo");
 
 
-    /*
-      SI NO ESCUCHA LA PALABRA
-      "NEXO", IGNORA LA FRASE.
-    */
+      /*
+        SI NO DIJO NEXO:
+        IGNORAR
+      */
 
-    const posicionNexo =
-      textoNormalizado.indexOf(
-        "nexo"
-      );
+      if (posicion === -1) {
 
+        mostrarEspera();
 
-    if (
-      posicionNexo === -1
-    ) {
-
-      mostrarEspera();
-
-      return;
-    }
+        return;
+      }
 
 
-    /*
-      AQUÍ SÍ ESCUCHÓ NEXO
-    */
+      /*
+        SACAR LA PREGUNTA
+        DESPUÉS DE NEXO
+      */
 
-    estado.textContent =
-      "ESCUCHANDO…";
-
-
-    instruccion.textContent =
-      "NEXO está atendiendo";
-
-
-    /*
-      TOMAMOS ÚNICAMENTE
-      LO QUE VIENE DESPUÉS
-      DE LA PALABRA NEXO
-    */
-
-    let pregunta =
-      textoOriginal.substring(
-        posicionNexo + 4
-      );
+      let pregunta =
+        textoOriginal
+          .substring(
+            posicion + 4
+          )
+          .replace(
+            /^[\s,.:;!?¿¡-]+/,
+            ""
+          )
+          .trim();
 
 
-    pregunta =
-      pregunta
-        .replace(
-          /^[\s,.:;!?¿¡-]+/,
-          ""
-        )
-        .trim();
+      if (
+        pregunta.length < 3
+      ) {
+
+        estado.textContent =
+          "TE ESCUCHO";
 
 
-    /*
-      SI SOLO DIJO "NEXO",
-      NO TOMAMOS LA SIGUIENTE
-      CONVERSACIÓN COMO PREGUNTA.
-    */
+        instruccion.textContent =
+          'Di "Nexo" seguido de tu pregunta';
 
-    if (
-      pregunta.length < 3
-    ) {
+        return;
+      }
+
 
       estado.textContent =
-        "TE ESCUCHO";
+        "PREGUNTA RECIBIDA";
 
 
       instruccion.textContent =
-        'Di "Nexo" seguido de tu pregunta';
+        "Preparando respuesta";
+
+
+      /*
+        RESPUESTA DE PRUEBA
+      */
+
+      setTimeout(() => {
+
+        hablar(
+          "He recibido tu pregunta. Estoy listo para consultar mis fuentes."
+        );
+
+      }, 400);
+    };
+
+
+
+  reconocimiento.onerror =
+    (event) => {
+
+
+      if (
+        event.error ===
+          "no-speech" ||
+        event.error ===
+          "aborted"
+      ) {
+
+        return;
+      }
+
+
+      console.log(
+        "Error reconocimiento:",
+        event.error
+      );
+    };
+
+
+
+  reconocimiento.onend =
+    () => {
+
+
+      if (
+        !sistemaActivo ||
+        nexoHablando
+      ) {
+
+        return;
+      }
 
 
       setTimeout(
-        mostrarEspera,
-        2500
+        reiniciarEscucha,
+        500
       );
-
-
-      return;
-    }
-
-
-    recibirPregunta(
-      pregunta
-    );
-  };
-
-
-
-  reconocimiento.onerror = (event) => {
-
-    reconocimientoActivo =
-      false;
-
-
-    console.log(
-      "Error de voz:",
-      event.error
-    );
-
-
-    if (
-      event.error === "no-speech" ||
-      event.error === "aborted"
-    ) {
-
-      return;
-    }
-
-
-    if (
-      event.error === "not-allowed" ||
-      event.error === "service-not-allowed" ||
-      event.error === "audio-capture" ||
-      event.error === "network"
-    ) {
-
-      sistemaActivo =
-        false;
-
-
-      estado.textContent =
-        "ERROR DE VOZ";
-
-
-      instruccion.textContent =
-        "Error: " + event.error;
-
-
-      return;
-    }
-  };
-
-
-
-  reconocimiento.onend = () => {
-
-    reconocimientoActivo =
-      false;
-
-
-    /*
-      SI NEXO ESTÁ HABLANDO,
-      NO REINICIAMOS EL MICRÓFONO.
-    */
-
-    if (
-      !sistemaActivo ||
-      nexoHablando
-    ) {
-
-      return;
-    }
-
-
-    setTimeout(
-      reiniciarEscucha,
-      500
-    );
-  };
+    };
 }
 
 
-/* ==========================================
+/* =========================
+   REINICIAR ESCUCHA
+========================= */
+
+function reiniciarEscucha() {
+
+  if (
+    !sistemaActivo ||
+    nexoHablando
+  ) {
+
+    return;
+  }
+
+
+  try {
+
+    reconocimiento.start();
+
+  } catch (error) {}
+}
+
+
+/* =========================
    BOTÓN
-========================================== */
+========================= */
 
 boton.addEventListener(
   "click",
@@ -990,25 +730,18 @@ boton.addEventListener(
 
 
     /*
-      SI YA ESTÁ ACTIVO:
-      APAGAR NEXO
+      APAGAR
     */
 
     if (sistemaActivo) {
 
-      sistemaActivo =
-        false;
+      sistemaActivo = false;
+
+      nexoHablando = false;
 
 
-      reconocimientoActivo =
-        false;
-
-
-      nexoHablando =
-        false;
-
-
-      speechSynthesis.cancel();
+      window.speechSynthesis
+        .cancel();
 
 
       try {
@@ -1031,7 +764,7 @@ boton.addEventListener(
 
 
     /*
-      ACTIVAR NEXO
+      ACTIVAR
     */
 
     estado.textContent =
@@ -1056,39 +789,58 @@ boton.addEventListener(
       estado.textContent =
         "RECONOCIMIENTO NO DISPONIBLE";
 
-
-      instruccion.textContent =
-        "Utiliza Google Chrome";
-
-
       return;
     }
 
 
-    sistemaActivo =
-      true;
+    /*
+      DESPERTAMOS EL MOTOR DE VOZ
+      DESDE EL CLIC DEL USUARIO
+    */
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
 
 
-    mostrarEspera();
+    const despertar =
+      new SpeechSynthesisUtterance(
+        "Nexo activado"
+      );
 
 
-    try {
-
-      reconocimiento.start();
-
-    } catch (error) {
-
-      sistemaActivo =
-        false;
+    despertar.lang =
+      "es-MX";
 
 
-      estado.textContent =
-        "NO PUDE INICIAR";
+    if (vozNexo) {
 
-
-      instruccion.textContent =
-        "Intenta nuevamente";
+      despertar.voice =
+        vozNexo;
     }
+
+
+    sistemaActivo = true;
+
+
+    despertar.onend = () => {
+
+      mostrarEspera();
+
+      reiniciarEscucha();
+    };
+
+
+    despertar.onerror = () => {
+
+      mostrarEspera();
+
+      reiniciarEscucha();
+    };
+
+
+    window.speechSynthesis.speak(
+      despertar
+    );
 
   }
 );
