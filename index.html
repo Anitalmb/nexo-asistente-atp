@@ -66,7 +66,6 @@
       height: 160px;
 
       display: block;
-
       border-radius: 15px;
     }
 
@@ -87,6 +86,8 @@
 
       box-shadow:
         0 0 25px rgba(70, 190, 255, 0.4);
+
+      transition: 0.2s;
     }
 
     button:hover {
@@ -153,13 +154,20 @@ const instruccion = document.getElementById("instruccion");
 const canvas = document.getElementById("onda");
 const ctx = canvas.getContext("2d");
 
+
 let audioContext;
 let analyser;
 let dataArray;
+
 let microfonoPreparado = false;
+
 let escuchando = false;
+let escuchaAutomatica = false;
 
 let ultimaPregunta = "";
+
+let huboResultado = false;
+let huboError = false;
 
 
 /* ==============================
@@ -167,13 +175,20 @@ let ultimaPregunta = "";
 ============================== */
 
 function ajustarCanvas() {
-  canvas.width = canvas.clientWidth * devicePixelRatio;
-  canvas.height = canvas.clientHeight * devicePixelRatio;
+
+  canvas.width =
+    canvas.clientWidth * devicePixelRatio;
+
+  canvas.height =
+    canvas.clientHeight * devicePixelRatio;
 }
 
 ajustarCanvas();
 
-window.addEventListener("resize", ajustarCanvas);
+window.addEventListener(
+  "resize",
+  ajustarCanvas
+);
 
 
 /* ==============================
@@ -187,54 +202,106 @@ function dibujarOnda() {
   const ancho = canvas.width;
   const alto = canvas.height;
 
-  ctx.clearRect(0, 0, ancho, alto);
+  ctx.clearRect(
+    0,
+    0,
+    ancho,
+    alto
+  );
 
   ctx.shadowBlur = 0;
+
 
   if (!escuchando || !analyser) {
 
     ctx.beginPath();
 
-    ctx.strokeStyle = "#4aaeff";
-    ctx.lineWidth = 3 * devicePixelRatio;
+    ctx.strokeStyle =
+      "#4aaeff";
 
-    ctx.moveTo(0, alto / 2);
-    ctx.lineTo(ancho, alto / 2);
+    ctx.lineWidth =
+      3 * devicePixelRatio;
+
+    ctx.moveTo(
+      0,
+      alto / 2
+    );
+
+    ctx.lineTo(
+      ancho,
+      alto / 2
+    );
 
     ctx.stroke();
 
     return;
   }
 
-  analyser.getByteTimeDomainData(dataArray);
+
+  analyser.getByteTimeDomainData(
+    dataArray
+  );
+
 
   ctx.beginPath();
 
-  ctx.lineWidth = 3 * devicePixelRatio;
-  ctx.strokeStyle = "#54d9ff";
+  ctx.lineWidth =
+    3 * devicePixelRatio;
 
-  ctx.shadowColor = "#24aaff";
-  ctx.shadowBlur = 16 * devicePixelRatio;
+  ctx.strokeStyle =
+    "#54d9ff";
 
-  const sliceWidth = ancho / dataArray.length;
+  ctx.shadowColor =
+    "#24aaff";
+
+  ctx.shadowBlur =
+    16 * devicePixelRatio;
+
+
+  const sliceWidth =
+    ancho / dataArray.length;
 
   let x = 0;
 
-  for (let i = 0; i < dataArray.length; i++) {
 
-    const v = dataArray[i] / 128.0;
-    const y = v * alto / 2;
+  for (
+    let i = 0;
+    i < dataArray.length;
+    i++
+  ) {
+
+    const v =
+      dataArray[i] / 128.0;
+
+    const y =
+      v * alto / 2;
+
 
     if (i === 0) {
-      ctx.moveTo(x, y);
+
+      ctx.moveTo(
+        x,
+        y
+      );
+
     } else {
-      ctx.lineTo(x, y);
+
+      ctx.lineTo(
+        x,
+        y
+      );
     }
+
 
     x += sliceWidth;
   }
 
-  ctx.lineTo(ancho, alto / 2);
+
+  ctx.lineTo(
+    ancho,
+    alto / 2
+  );
+
   ctx.stroke();
 }
 
@@ -245,7 +312,10 @@ function dibujarOnda() {
 
 async function prepararMicrofono() {
 
-  if (microfonoPreparado) return true;
+  if (microfonoPreparado) {
+    return true;
+  }
+
 
   try {
 
@@ -254,25 +324,45 @@ async function prepararMicrofono() {
         audio: true
       });
 
+
     audioContext =
-      new (window.AudioContext ||
-           window.webkitAudioContext)();
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
 
-    analyser = audioContext.createAnalyser();
 
-    analyser.fftSize = 2048;
+    analyser =
+      audioContext.createAnalyser();
+
+
+    analyser.fftSize =
+      2048;
+
 
     const source =
-      audioContext.createMediaStreamSource(stream);
+      audioContext.createMediaStreamSource(
+        stream
+      );
 
-    source.connect(analyser);
+
+    source.connect(
+      analyser
+    );
+
 
     dataArray =
-      new Uint8Array(analyser.fftSize);
+      new Uint8Array(
+        analyser.fftSize
+      );
 
-    microfonoPreparado = true;
+
+    microfonoPreparado =
+      true;
+
 
     return true;
+
 
   } catch (error) {
 
@@ -295,96 +385,287 @@ const SpeechRecognition =
   window.SpeechRecognition ||
   window.webkitSpeechRecognition;
 
+
 let reconocimiento;
+
 
 if (SpeechRecognition) {
 
   reconocimiento =
     new SpeechRecognition();
 
-  reconocimiento.lang = "es-MX";
 
-  reconocimiento.continuous = false;
+  reconocimiento.lang =
+    "es-MX";
 
-  reconocimiento.interimResults = false;
+
+  reconocimiento.continuous =
+    false;
+
+
+  reconocimiento.interimResults =
+    false;
+
+
+  reconocimiento.maxAlternatives =
+    1;
+
 
 
   reconocimiento.onstart = () => {
 
     escuchando = true;
 
+    huboResultado = false;
+    huboError = false;
+
+
     estado.textContent =
       "ESCUCHANDO…";
+
 
     instruccion.textContent =
       "Haz tu pregunta";
   };
 
 
+
+  reconocimiento.onspeechstart = () => {
+
+    estado.textContent =
+      "ESCUCHANDO…";
+
+
+    instruccion.textContent =
+      "Te estoy escuchando";
+  };
+
+
+
   reconocimiento.onresult = (event) => {
+
+    huboResultado = true;
+
 
     ultimaPregunta =
       event.results[0][0].transcript;
 
-    /*
-      La pregunta queda guardada internamente.
-      NO se muestra en pantalla.
-    */
 
     console.log(
       "Pregunta recibida:",
       ultimaPregunta
     );
 
+
     estado.textContent =
       "PREGUNTA RECIBIDA";
 
+
     instruccion.textContent =
       "NEXO entendió tu pregunta";
+
+
+    /*
+      La pregunta queda guardada
+      internamente.
+
+      NO se muestra en pantalla.
+    */
   };
+
 
 
   reconocimiento.onerror = (event) => {
 
-  escuchando = false;
+    huboError = true;
 
-  estado.textContent = "ERROR DE VOZ";
+    escuchando = false;
 
-  instruccion.textContent =
-    "Error: " + event.error;
-};
+
+    console.log(
+      "Error de voz:",
+      event.error
+    );
+
+
+    if (
+      event.error === "no-speech"
+    ) {
+
+      estado.textContent =
+        "EN ESPERA";
+
+
+      instruccion.textContent =
+        "Sigo escuchando";
+
+      return;
+    }
+
+
+    if (
+      event.error === "aborted"
+    ) {
+
+      return;
+    }
+
+
+    if (
+      event.error === "not-allowed" ||
+      event.error === "service-not-allowed" ||
+      event.error === "audio-capture"
+    ) {
+
+      escuchaAutomatica =
+        false;
+
+
+      estado.textContent =
+        "ERROR DE VOZ";
+
+
+      instruccion.textContent =
+        "Error: " + event.error;
+
+      return;
+    }
+
+
+    if (
+      event.error === "network"
+    ) {
+
+      escuchaAutomatica =
+        false;
+
+
+      estado.textContent =
+        "ERROR DE VOZ";
+
+
+      instruccion.textContent =
+        "Error: network";
+
+      return;
+    }
+
+
+    estado.textContent =
+      "ERROR DE VOZ";
+
+
+    instruccion.textContent =
+      "Error: " + event.error;
+  };
+
 
 
   reconocimiento.onend = () => {
 
     escuchando = false;
 
+
+    if (!escuchaAutomatica) {
+
+      return;
+    }
+
+
+    let espera = 800;
+
+
+    if (huboResultado) {
+
+      espera = 1800;
+    }
+
+
     setTimeout(() => {
 
-      estado.textContent =
-        "EN ESPERA";
+      if (!escuchaAutomatica) {
 
-      instruccion.textContent =
-        "Toca el micrófono para comenzar";
+        return;
+      }
 
-    }, 4000);
+
+      try {
+
+        reconocimiento.start();
+
+      } catch (error) {
+
+        console.log(
+          "Esperando para reiniciar..."
+        );
+      }
+
+    }, espera);
   };
-
 }
 
 
 /* ==============================
-   BOTÓN DE MICRÓFONO
+   BOTÓN DEL MICRÓFONO
 ============================== */
 
 boton.addEventListener(
   "click",
   async () => {
 
+
+    /*
+      Si ya está activo,
+      la segunda pulsación lo detiene.
+    */
+
+    if (escuchaAutomatica) {
+
+      escuchaAutomatica =
+        false;
+
+      escuchando =
+        false;
+
+
+      try {
+
+        reconocimiento.abort();
+
+      } catch (error) {}
+
+
+      estado.textContent =
+        "EN ESPERA";
+
+
+      instruccion.textContent =
+        "Toca el micrófono para comenzar";
+
+
+      return;
+    }
+
+
+
+    estado.textContent =
+      "PREPARANDO…";
+
+
+    instruccion.textContent =
+      "Activando micrófono";
+
+
+
     const preparado =
       await prepararMicrofono();
 
-    if (!preparado) return;
+
+    if (!preparado) {
+
+      return;
+    }
+
 
 
     if (!SpeechRecognition) {
@@ -392,11 +673,19 @@ boton.addEventListener(
       estado.textContent =
         "RECONOCIMIENTO NO DISPONIBLE";
 
+
       instruccion.textContent =
         "Utiliza Google Chrome";
 
+
       return;
     }
+
+
+
+    escuchaAutomatica =
+      true;
+
 
 
     try {
@@ -405,8 +694,16 @@ boton.addEventListener(
 
     } catch (error) {
 
-      console.log(error);
+      estado.textContent =
+        "NO PUDE INICIAR";
 
+
+      instruccion.textContent =
+        "Intenta nuevamente";
+
+
+      escuchaAutomatica =
+        false;
     }
 
   }
