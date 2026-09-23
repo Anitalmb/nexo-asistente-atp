@@ -344,16 +344,15 @@ if (SpeechRecognition) {
   };
 
 
-  reconocimiento.onerror = () => {
+  reconocimiento.onerror = (event) => {
 
-    escuchando = false;
+  escuchando = false;
 
-    estado.textContent =
-      "NO PUDE ESCUCHARTE";
+  estado.textContent = "ERROR DE VOZ";
 
-    instruccion.textContent =
-      "Intenta nuevamente";
-  };
+  instruccion.textContent =
+    "Error: " + event.error;
+};
 
 
   reconocimiento.onend = () => {
