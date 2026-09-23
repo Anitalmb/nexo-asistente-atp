@@ -21,7 +21,6 @@
       display: flex;
       justify-content: center;
       align-items: center;
-
       text-align: center;
     }
 
@@ -159,18 +158,14 @@ let analyser;
 let dataArray;
 
 let microfonoPreparado = false;
-
 let sistemaActivo = false;
 let reconocimientoActivo = false;
 
-let nexoActivado = false;
 let ultimaPregunta = "";
-
-let temporizadorNexo = null;
 
 
 /* ==============================
-   AJUSTAR CANVAS
+   CANVAS
 ============================== */
 
 function ajustarCanvas() {
@@ -211,11 +206,12 @@ function dibujarOnda() {
   ctx.shadowBlur = 0;
 
 
-  if (!reconocimientoActivo || !analyser) {
+  if (!sistemaActivo || !analyser) {
 
     ctx.beginPath();
 
-    ctx.strokeStyle = "#4aaeff";
+    ctx.strokeStyle =
+      "#4aaeff";
 
     ctx.lineWidth =
       3 * devicePixelRatio;
@@ -355,7 +351,8 @@ async function prepararMicrofono() {
       );
 
 
-    microfonoPreparado = true;
+    microfonoPreparado =
+      true;
 
 
     return true;
@@ -366,8 +363,10 @@ async function prepararMicrofono() {
     estado.textContent =
       "MICRÓFONO NO DISPONIBLE";
 
+
     instruccion.textContent =
       "Revisa el permiso del navegador";
+
 
     return false;
   }
@@ -383,66 +382,41 @@ function normalizar(texto) {
   return texto
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    );
 }
 
 
 /* ==============================
-   ACTIVAR NEXO
+   MOSTRAR ESPERA
 ============================== */
 
-function activarNexo() {
+function mostrarEspera() {
 
-  nexoActivado = true;
+  if (!sistemaActivo) {
+    return;
+  }
 
 
   estado.textContent =
-    "ESCUCHANDO…";
+    "EN ESPERA";
 
 
   instruccion.textContent =
-    "Haz tu pregunta";
-
-
-  clearTimeout(
-    temporizadorNexo
-  );
-
-
-  temporizadorNexo =
-    setTimeout(() => {
-
-      nexoActivado = false;
-
-
-      estado.textContent =
-        "EN ESPERA";
-
-
-      instruccion.textContent =
-        'Di "Oye Nexo" para comenzar';
-
-    }, 10000);
+    'Di "Oye Nexo" seguido de tu pregunta';
 }
 
 
 /* ==============================
-   PREGUNTA RECIBIDA
+   RECIBIR PREGUNTA
 ============================== */
 
 function recibirPregunta(pregunta) {
 
-  clearTimeout(
-    temporizadorNexo
-  );
-
-
   ultimaPregunta =
     pregunta.trim();
-
-
-  nexoActivado =
-    false;
 
 
   console.log(
@@ -459,21 +433,10 @@ function recibirPregunta(pregunta) {
     "NEXO entendió tu pregunta";
 
 
-  setTimeout(() => {
-
-    if (!sistemaActivo) {
-      return;
-    }
-
-
-    estado.textContent =
-      "EN ESPERA";
-
-
-    instruccion.textContent =
-      'Di "Oye Nexo" para comenzar';
-
-  }, 1800);
+  setTimeout(
+    mostrarEspera,
+    1800
+  );
 }
 
 
@@ -518,24 +481,7 @@ if (SpeechRecognition) {
       true;
 
 
-    if (nexoActivado) {
-
-      estado.textContent =
-        "ESCUCHANDO…";
-
-
-      instruccion.textContent =
-        "Haz tu pregunta";
-
-    } else {
-
-      estado.textContent =
-        "EN ESPERA";
-
-
-      instruccion.textContent =
-        'Di "Oye Nexo" para comenzar';
-    }
+    mostrarEspera();
   };
 
 
@@ -546,7 +492,7 @@ if (SpeechRecognition) {
       event.results[0][0].transcript;
 
 
-    const texto =
+    const textoNormalizado =
       normalizar(
         textoOriginal
       );
@@ -559,58 +505,50 @@ if (SpeechRecognition) {
 
 
     /*
-      SI NEXO YA FUE ACTIVADO,
-      TODO LO SIGUIENTE ES LA PREGUNTA
-    */
-
-    if (nexoActivado) {
-
-      recibirPregunta(
-        textoOriginal
-      );
-
-      return;
-    }
-
-
-    /*
-      BUSCAR LA PALABRA NEXO
+      BUSCAMOS LA PALABRA NEXO.
+      SI NO ESTÁ, IGNORAMOS TODO.
     */
 
     const posicionNexo =
-      texto.indexOf("nexo");
+      textoNormalizado.indexOf(
+        "nexo"
+      );
 
 
     if (posicionNexo === -1) {
 
-      /*
-        Conversación normal.
-        NEXO la ignora.
-      */
+      mostrarEspera();
 
       return;
     }
 
 
     /*
-      BUSCAR LO QUE VIENE
-      DESPUÉS DE "NEXO"
+      AQUÍ SÍ ESCUCHÓ "NEXO"
     */
 
-    const posicionOriginal =
-      normalizar(
-        textoOriginal
-      ).indexOf("nexo");
+    estado.textContent =
+      "ESCUCHANDO…";
 
 
-    let despuesDeNexo =
+    instruccion.textContent =
+      "NEXO está atendiendo";
+
+
+    /*
+      EXTRAEMOS SOLAMENTE
+      LO QUE VIENE DESPUÉS
+      DE LA PALABRA NEXO
+    */
+
+    let pregunta =
       textoOriginal.substring(
-        posicionOriginal + 4
+        posicionNexo + 4
       );
 
 
-    despuesDeNexo =
-      despuesDeNexo
+    pregunta =
+      pregunta
         .replace(
           /^[\s,.:;!?¿¡-]+/,
           ""
@@ -618,35 +556,46 @@ if (SpeechRecognition) {
         .trim();
 
 
-
     /*
-      EJEMPLO:
-      "Oye Nexo, qué es el programa analítico"
+      SI SOLO DIJO:
+      "OYE NEXO"
 
-      Ya viene incluida la pregunta.
+      NO ACEPTAMOS OTRA FRASE
+      AUTOMÁTICAMENTE.
     */
 
     if (
-      despuesDeNexo.length > 2
+      pregunta.length < 3
     ) {
 
-      recibirPregunta(
-        despuesDeNexo
+      estado.textContent =
+        "TE ESCUCHO";
+
+
+      instruccion.textContent =
+        'Di: "Nexo, ..." seguido de tu pregunta';
+
+
+      setTimeout(
+        mostrarEspera,
+        2500
       );
+
 
       return;
     }
 
 
-
     /*
-      EJEMPLO:
-      "Oye Nexo"
+      EJEMPLO CORRECTO:
 
-      Ahora espera la pregunta.
+      "Oye Nexo,
+      qué es el Programa Analítico"
     */
 
-    activarNexo();
+    recibirPregunta(
+      pregunta
+    );
   };
 
 
@@ -689,6 +638,7 @@ if (SpeechRecognition) {
 
       instruccion.textContent =
         "Error: " + event.error;
+
 
       return;
     }
@@ -733,7 +683,7 @@ if (SpeechRecognition) {
 
 
 /* ==============================
-   BOTÓN DEL MICRÓFONO
+   BOTÓN
 ============================== */
 
 boton.addEventListener(
@@ -742,8 +692,8 @@ boton.addEventListener(
 
 
     /*
-      SEGUNDA PULSACIÓN:
-      DETENER NEXO
+      SI YA ESTÁ ACTIVO:
+      APAGAR
     */
 
     if (sistemaActivo) {
@@ -751,16 +701,9 @@ boton.addEventListener(
       sistemaActivo =
         false;
 
-      nexoActivado =
-        false;
 
       reconocimientoActivo =
         false;
-
-
-      clearTimeout(
-        temporizadorNexo
-      );
 
 
       try {
@@ -784,8 +727,7 @@ boton.addEventListener(
 
 
     /*
-      PRIMERA PULSACIÓN:
-      ACTIVAR SISTEMA
+      ACTIVAR
     */
 
     estado.textContent =
@@ -824,12 +766,7 @@ boton.addEventListener(
       true;
 
 
-    estado.textContent =
-      "EN ESPERA";
-
-
-    instruccion.textContent =
-      'Di "Oye Nexo" para comenzar';
+    mostrarEspera();
 
 
     try {
